@@ -5,35 +5,44 @@ public class DragAndDrop : MonoBehaviour {
 
     private bool currentlyDragging;
     private Transform tankLocations;
-    private GameObject foodGameObject;
+    private Transform filterLocations;
+    private GameObject draggingGameObject;
+    private bool draggingFilter;
     
-    private bool hasSalt;
-
     public enum ItemType
     {
         none,
+        change,
         red,
         blue
     };
 
+    public enum FilterType
+    {
+        none,
+        change,
+        food,
+        salt
+    }
+
     public enum SaltType
     {
         none,
-        salt,
-        filter
+        hasSalt,
+        doesNotHaveSalt
     }
 
     public ItemType foodType;
     public ItemType fishType;
-    public ItemType filterType;
-    public SaltType salt;
-
+    public FilterType filterType;
+    public SaltType saltType;
 
     void Start()
     {
         currentlyDragging = false;
+        draggingFilter = false;
         tankLocations = GameObject.Find("TankLocations").transform;
-        hasSalt = false;
+        filterLocations = GameObject.Find("FilterLocations").transform;
     }
 
     // Update is called once per frame
@@ -43,28 +52,24 @@ public class DragAndDrop : MonoBehaviour {
         {
             Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             mousePos.z = 0;
-            foodGameObject.transform.position = mousePos;
+            draggingGameObject.transform.position = mousePos;
         }
     }
 
     public void PressDown()
     {
         int typeCount = 0;
-        if(GetFoodType() != ItemType.none)
+        if(foodType != ItemType.none)
         {
-            foodType = GetFoodType();
             typeCount++;
-        } else if (GetFilterType() != ItemType.none)
+        } else if (filterType != FilterType.none)
         {
-            filterType = GetFilterType();
             typeCount++;
-        } else if (GetFishType() != ItemType.none)
+        } else if (fishType != ItemType.none)
         {
-            fishType = GetFishType();
             typeCount++;
-        } else if (GetSaltType() != SaltType.none)
+        } else if (saltType == SaltType.hasSalt)
         {
-            salt = GetSaltType();
             typeCount++;
         }
 
@@ -79,53 +84,41 @@ public class DragAndDrop : MonoBehaviour {
         Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
         currentlyDragging = true;
         mousePos.z = 0;
-        hasSalt = false;
         if (foodType != ItemType.none)
         {
-            foodGameObject = Instantiate(transform.parent.GetComponent<Items>().GetFoodGameObject(foodType), mousePos, Quaternion.identity) as GameObject;
-        } else if (filterType != ItemType.none)
+            draggingGameObject = Instantiate(transform.parent.GetComponent<Items>().GetFoodGameObject(foodType), mousePos, Quaternion.identity) as GameObject;
+        } else if (filterType != FilterType.none)
         {
-            
+            draggingFilter = true;
+            draggingGameObject = Instantiate(transform.parent.GetComponent<Items>().GetFilterGameObject(filterType), mousePos, Quaternion.identity) as GameObject;
         } else if(fishType != ItemType.none)
         {
 
-        } else if(salt != SaltType.none)
+        } else if(saltType  == SaltType.hasSalt)
         {
-
+            draggingGameObject = Instantiate(transform.parent.GetComponent<Items>().GetSaltGameObject(), mousePos, Quaternion.identity) as GameObject;
         }
     }
 
     public void PressUp()
     {
         currentlyDragging = false;
-        Destroy(foodGameObject);
-        foreach (Transform tank in tankLocations)
+        Destroy(draggingGameObject);
+        if (!draggingFilter)
         {
-            if (foodType != ItemType.none)
+            foreach (Transform tank in tankLocations)
             {
-                tank.GetComponent<FishTank>().ChangesBox(Input.mousePosition, foodType, hasSalt);
+                tank.GetComponent<FishTank>().ChangesBox(Input.mousePosition, foodType, fishType, filterType, saltType);
             }
+        } else
+        {
+            foreach (Transform tankFilter in filterLocations)
+            {
+                tankFilter.GetComponent<TankFilter>().ChangesFilterBox(Input.mousePosition, foodType, fishType, filterType, saltType);
+            }
+
         }
-    }
-
-    public ItemType GetFoodType()
-    {
-        return foodType;
-    }
-
-    public ItemType GetFishType()
-    {
-        return fishType;
-    }
-
-    public ItemType GetFilterType()
-    {
-        return filterType;
-    }
-
-    public SaltType GetSaltType()
-    {
-        return salt;
+        draggingFilter = false;
     }
 
 

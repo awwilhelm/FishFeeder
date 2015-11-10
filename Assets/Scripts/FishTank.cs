@@ -5,68 +5,77 @@ public class FishTank : MonoBehaviour {
 
     
     public GameObject[] connection;
-    public GameObject redFood;
-    public GameObject blueFood;
     private FishTank[] fishTankScript;
-    public bool waterHasSalt;
     private BoxCollider2D boxCollider2D;
+    private SpriteManager spriteManagerScript;
+
+    public DragAndDrop.ItemType tankFoodType;
+    public DragAndDrop.ItemType tankFishType;
+    public DragAndDrop.FilterType tankFilterType;
+    public DragAndDrop.SaltType tankSalt;
+
+    public DragAndDrop.ItemType foodTypeSeed;
+    public DragAndDrop.SaltType saltTypeSeed;
 
 
-    
 
-    public DragAndDrop.ItemType food;
+    public enum Type
+    {
+        food,
+        salt,
+        fish,
+        filter
+    }
 	// Use this for initialization
 	void Start ()
     {
-        food = DragAndDrop.ItemType.none;
         boxCollider2D = GetComponent<BoxCollider2D>();
-        waterHasSalt = false;
-	}
-	
-	// Update is called once per frame
-	void Update ()
-    {
-        //if(previousFood != food)
-        //{
-        //    previousFood = food;
-        //    SetFishFood(food);
-        //}
+        spriteManagerScript = GameObject.Find("Canvas").GetComponent<SpriteManager>();
 	}
 
-    public void SetFishFood(DragAndDrop.ItemType foodType, bool hasSalt)
-    {
-        food = foodType;
-        waterHasSalt = hasSalt;
 
-        GetComponent<SpriteRenderer>().sprite = transform.parent.GetComponent<FishTankManager>().GetSpriteFoodType(foodType);
-        //Instantiate(redFood, mousePos, Quaternion.identity);
-        DefineConnections();
-    }
-
-    public void DefineConnections()
+    public void ChangesBox(Vector3 mousePos, DragAndDrop.ItemType foodType, DragAndDrop.ItemType fishType, DragAndDrop.FilterType filterType, DragAndDrop.SaltType saltType)
     {
-        fishTankScript = new FishTank[connection.Length];
-        if (connection.Length > 0)
+        if (IsMouseOverBox(mousePos))
         {
-            for (int i = 0; i < connection.Length; i++)
+            foodTypeSeed = foodType;
+            saltTypeSeed = saltType;
+            if (foodType != DragAndDrop.ItemType.none)
             {
-                if (connection[i].GetComponent<TankFilter>() != null)
-                {
-                    connection[i].GetComponent<TankFilter>().ClearFishFood(food, waterHasSalt);
-                }
-                else
-                {
-                    print("ERROR: One of your gameobjects does not have a tankFilterScript attached");
-                }
+                tankFoodType = foodType;
+            } else if (fishType != DragAndDrop.ItemType.none)
+            {
+                tankFishType = fishType;
+            } else if(saltType != DragAndDrop.SaltType.none)
+            {
+                tankSalt = saltType;
             }
+            FlowableObjects(tankFoodType, tankSalt);
         }
     }
 
-    public void ChangesBox(Vector3 mousePos, DragAndDrop.ItemType foodType, bool hasSalt)
+    public void FlowableObjects(DragAndDrop.ItemType foodType, DragAndDrop.SaltType saltType)
     {
-        if(IsMouseOverBox(mousePos))
+        tankFoodType = foodType;
+        tankSalt = saltType;
+
+        if(foodTypeSeed != DragAndDrop.ItemType.none)
         {
-            SetFishFood(foodType, hasSalt);
+            tankFoodType = foodTypeSeed;
+        }
+        if(saltTypeSeed != DragAndDrop.SaltType.none)
+        {
+            tankSalt = saltTypeSeed;
+        }
+
+        if (saltType != DragAndDrop.SaltType.hasSalt)
+        {
+            GetComponent<SpriteRenderer>().sprite = spriteManagerScript.GetSpriteFoodType(tankFoodType);
+        }
+
+        for(int i = 0; i < connection.Length; i++)
+        {
+            connection[i].GetComponent<TankFilter>().FlowableFilterObjects(tankFoodType, tankSalt);
         }
     }
 
@@ -80,5 +89,15 @@ public class FishTank : MonoBehaviour {
         Rect bounds = new Rect(boxColliderPos2D.x - (boxColliderSize2D.x / 2), boxColliderPos2D.y - (boxColliderSize2D.y / 2), boxColliderSize2D.x, boxColliderSize2D.y);
 
         return bounds.Contains(mousePosition);
+    }
+
+    public DragAndDrop.ItemType GetTankFood()
+    {
+        return tankFoodType;
+    }
+
+    public DragAndDrop.SaltType GetTankSalt()
+    {
+        return tankSalt;
     }
 }
