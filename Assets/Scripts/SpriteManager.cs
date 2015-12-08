@@ -1,15 +1,21 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class SpriteManager : MonoBehaviour
 {
 
     public Sprite blueSprite;
     public Sprite redSprite;
+    public Sprite multipleFoodSprite;
     public Sprite defaultSprite;
 
     public Sprite foodFilterSprite;
     public Sprite saltFilterSprite;
+
+    public Sprite blueSaltWaterFish;
+    public Sprite blueFreshWaterFish;
+    public Sprite redSaltWaterFish;
+    public Sprite redFreshWaterFish;
 
     // Use this for initialization
     void Start()
@@ -23,15 +29,48 @@ public class SpriteManager : MonoBehaviour
 
     }
 
-    public Sprite GetSpriteFoodType(DragAndDrop.ItemType foodType)
+    public Sprite GetSpriteFoodType(List<DragAndDrop.ItemType> foodType)
     {
-        if (foodType == DragAndDrop.ItemType.blue)
+        if (foodType.Count == 1)
         {
-            return blueSprite;
+            if (foodType[0] == DragAndDrop.ItemType.blue)
+            {
+                return blueSprite;
+            }
+            else if (foodType[0] == DragAndDrop.ItemType.red)
+            {
+                return redSprite;
+            }
+        } else if(foodType.Count > 1)
+        {
+            return multipleFoodSprite;
         }
-        else if (foodType == DragAndDrop.ItemType.red)
+        return defaultSprite;
+    }
+
+    public Sprite GetSpriteFishType(DragAndDrop.FishType fishType)
+    {
+        if (fishType.fish == DragAndDrop.ItemType.blue)
         {
-            return redSprite;
+            if (fishType.salt)
+            {
+                return blueSaltWaterFish;
+            }
+            else
+            {
+                return blueFreshWaterFish;
+            }
+        }
+        else if (fishType.fish == DragAndDrop.ItemType.red)
+        {
+            if (fishType.salt)
+            {
+                return redSaltWaterFish;
+            }
+            else
+            {
+                return redFreshWaterFish;
+            }
         }
         return defaultSprite;
     }

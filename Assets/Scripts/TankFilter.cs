@@ -1,12 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class TankFilter : MonoBehaviour {
 
     public DragAndDrop.FilterType filter;
     public bool saltFilter;
     public GameObject[] connection;
-    private World worldScript;
     private BoxCollider2D boxCollider2D;
     private SpriteManager spriteManagerScript;
 
@@ -15,7 +15,6 @@ public class TankFilter : MonoBehaviour {
     void Start()
     {
         boxCollider2D = GetComponent<BoxCollider2D>();
-        worldScript = GameObject.Find("Canvas").GetComponent<World>();
         spriteManagerScript = GameObject.Find("Canvas").GetComponent<SpriteManager>();
     }
 	// Update is called once per frame
@@ -24,11 +23,12 @@ public class TankFilter : MonoBehaviour {
 	}
 
 
-    public void ChangesFilterBox(Vector3 mousePos, DragAndDrop.ItemType foodType, DragAndDrop.ItemType fishType, DragAndDrop.FilterType filterType, DragAndDrop.SaltType saltType)
+    public void ChangesFilterBox(Vector3 mousePos, DragAndDrop.ItemType foodType, DragAndDrop.FilterType filterType, bool saltType)
     {
         if (IsMouseOverBox(mousePos))
         {
             filter = filterType;
+            List<DragAndDrop.ItemType> tempFoodType = new List<DragAndDrop.ItemType>();
 
 
             GetComponent<SpriteRenderer>().sprite = spriteManagerScript.GetSpriteFilterType(filterType);
@@ -37,30 +37,30 @@ public class TankFilter : MonoBehaviour {
             for (int i = 0; i < connection.Length; i++)
             {
                 FishTank tempTank = connection[i].GetComponent<FishTank>();
-                foodType = tempTank.GetTankFood();
+                tempFoodType = tempTank.GetTankFoodType();
                 saltType = tempTank.GetTankSalt();
 
                 if(filter == DragAndDrop.FilterType.food)
                 {
-                    foodType = DragAndDrop.ItemType.none;
+                    tempFoodType.Clear();
                 } else if(filter == DragAndDrop.FilterType.salt)
                 {
-                    saltType = DragAndDrop.SaltType.none;
+                    saltType = false;
                 }
 
-                tempTank.FlowableObjects(foodType, saltType);
+                tempTank.FlowableObjects(tempFoodType, saltType);
             }
 
         }
     }
-    public void FlowableFilterObjects(DragAndDrop.ItemType foodType, DragAndDrop.SaltType saltType)
+    public void FlowableFilterObjects(List<DragAndDrop.ItemType> foodType, bool saltType)
     {
         if (filter == DragAndDrop.FilterType.food)
         {
-            foodType = DragAndDrop.ItemType.none;
+            foodType.Clear();
         } else if (filter == DragAndDrop.FilterType.salt)
         {
-            saltType = DragAndDrop.SaltType.doesNotHaveSalt;
+            saltType = false;
         }
         
         for (int i = 0; i < connection.Length; i++)

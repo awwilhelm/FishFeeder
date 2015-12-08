@@ -1,5 +1,5 @@
 ﻿using UnityEngine;
-using System.Collections;
+using System.Collections.Generic;
 
 public class DragAndDrop : MonoBehaviour {
 
@@ -8,6 +8,7 @@ public class DragAndDrop : MonoBehaviour {
     private Transform filterLocations;
     private GameObject draggingGameObject;
     private bool draggingFilter;
+    private bool draggingFish;
     
     public enum ItemType
     {
@@ -25,22 +26,24 @@ public class DragAndDrop : MonoBehaviour {
         salt
     }
 
-    public enum SaltType
+    public struct FishType
     {
-        none,
-        hasSalt,
-        doesNotHaveSalt
-    }
+        public ItemType fish;
+        public bool salt;
+    };
 
     public ItemType foodType;
-    public ItemType fishType;
+    public FishType fishType;
+    public ItemType fishTemp;
+    public bool fishHasSaltTemp;
     public FilterType filterType;
-    public SaltType saltType;
+    public bool saltType;
 
     void Start()
     {
         currentlyDragging = false;
         draggingFilter = false;
+        draggingFish = false;
         tankLocations = GameObject.Find("TankLocations").transform;
         filterLocations = GameObject.Find("FilterLocations").transform;
     }
@@ -58,6 +61,9 @@ public class DragAndDrop : MonoBehaviour {
 
     public void PressDown()
     {
+        fishType.fish = fishTemp;
+        fishType.salt = fishHasSaltTemp;
+
         int typeCount = 0;
         if(foodType != ItemType.none)
         {
@@ -65,10 +71,10 @@ public class DragAndDrop : MonoBehaviour {
         } else if (filterType != FilterType.none)
         {
             typeCount++;
-        } else if (fishType != ItemType.none)
+        } else if (fishType.fish != ItemType.none)
         {
             typeCount++;
-        } else if (saltType == SaltType.hasSalt)
+        } else if (saltType)
         {
             typeCount++;
         }
@@ -91,10 +97,11 @@ public class DragAndDrop : MonoBehaviour {
         {
             draggingFilter = true;
             draggingGameObject = Instantiate(transform.parent.GetComponent<Items>().GetFilterGameObject(filterType), mousePos, Quaternion.identity) as GameObject;
-        } else if(fishType != ItemType.none)
+        } else if(fishType.fish != ItemType.none)
         {
-
-        } else if(saltType  == SaltType.hasSalt)
+            draggingGameObject = Instantiate(transform.parent.GetComponent<Items>().GetFishGameObject(fishType), mousePos, Quaternion.identity) as GameObject;
+            draggingFish = true;
+        } else if(saltType)
         {
             draggingGameObject = Instantiate(transform.parent.GetComponent<Items>().GetSaltGameObject(), mousePos, Quaternion.identity) as GameObject;
         }
@@ -104,21 +111,30 @@ public class DragAndDrop : MonoBehaviour {
     {
         currentlyDragging = false;
         Destroy(draggingGameObject);
+
         if (!draggingFilter)
         {
             foreach (Transform tank in tankLocations)
             {
-                tank.GetComponent<FishTank>().ChangesBox(Input.mousePosition, foodType, fishType, filterType, saltType);
+                if(draggingFish)
+                {
+
+                    tank.GetComponent<FishTank>().AddFish(Input.mousePosition, fishType, saltType);
+                } else
+                {
+                    tank.GetComponent<FishTank>().ChangesBox(Input.mousePosition, foodType, filterType, saltType);
+                }
             }
         } else
         {
             foreach (Transform tankFilter in filterLocations)
             {
-                tankFilter.GetComponent<TankFilter>().ChangesFilterBox(Input.mousePosition, foodType, fishType, filterType, saltType);
+                tankFilter.GetComponent<TankFilter>().ChangesFilterBox(Input.mousePosition, foodType, filterType, saltType);
             }
 
         }
         draggingFilter = false;
+        draggingFish = false;
     }
 
 
